@@ -5,14 +5,17 @@ from nltk import pos_tag
 from nltk import ne_chunk, sent_tokenize, word_tokenize
 from nltk.corpus import wordnet as wn
 from collections import OrderedDict
-import ntpath
 import os
 from subprocess import check_output
 import sys
 import numpy
 from json import dumps
+
 nltk.download('maxent_ne_chunker')
 nltk.download('words')
+nltk.download('wordnet')
+nltk.download('punkt')
+nltk.download('averaged_perceptron_tagger')
 
 redacted_entity_count=[]
 redacted_gender_count=[]
@@ -23,7 +26,7 @@ filenames=[]
 def readFiles(pattern="*.txt"):
     data=[]
     for pat in pattern:
-        for file in glob.glob('/home/nithivarn/TextAnalytics/cs5293p20-project-1/'+pat):
+        for file in glob.glob(pat):
             filenames.append(file)
             data.append(read(file))
         #print(data)
@@ -33,7 +36,7 @@ def redact_names(data):
     redacted_list=[]
     for text in data:
         for sentence in sent_tokenize(text):
-            ne_tree = nltk.ne_chunk(nltk.pos_tag(nltk.word_tokenize(sentence)))
+            ne_tree = nltk.ne_chunk(pos_tag(word_tokenize(sentence)))
             for tree in ne_tree.subtrees(filter=lambda t: t.label() == 'PERSON'):
                 for leaf in tree.leaves():
                     redacted_list.append(leaf[0])
@@ -137,13 +140,10 @@ def redact_concept(data,concept):
     return modifieddata,redacted_sentences,concept_words
 
 def stats(args):
-    #data=readFiles()
     d = OrderedDict()
     d["names"]=redacted_entity_count
     d["dates"]=redacted_date_count
-    #redact_gender,count_genders = redact_genders(data)
     d["genders"]=redacted_gender_count
-    #redact_concept,sentences,words=redact_concept(data,concept)
     if args == "stderr" or args=="STDERR":
         print(d,file=sys.stderr)
     elif args == "stdout" or args == "STDOUT":
