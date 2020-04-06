@@ -9,7 +9,7 @@ if __name__=="__main__":
     parser.add_argument("--names",action="store_true",help="It helps in redacting names")
     parser.add_argument("--genders",action="store_true",help="It helps in redacting genders")
     parser.add_argument("--dates",action="store_true",help="It helps in redacting dates")
-    parser.add_argument("--concept",type=str,required=True,help="It helps in redacting concepts")
+    parser.add_argument("--concept",type=str,action='append',required=True,help="It helps in redacting concepts")
     parser.add_argument("--stats",help="It provides the stats of the redacted flags")
     args=parser.parse_args()
     if args.input:
@@ -25,7 +25,8 @@ if __name__=="__main__":
         final_data,gender_count=project1.redact_genders(final_data)
         #print(final_data)
     if args.concept:
-        project1.redact_concept(final_data,args.concept)
+        #print(args.concept)
+        final_data,redacted_sentences_list,concept_words=project1.redact_concept(final_data,args.concept)
     if args.stats:
         project1.stats(args.stats)
     if args.output:

@@ -20,6 +20,10 @@ nltk.download('averaged_perceptron_tagger')
 redacted_entity_count=[]
 redacted_gender_count=[]
 redacted_date_count=[]
+redacted_sentences=[]
+concept_words=[]
+
+
 
 read = lambda x: open(x,'r').read()
 filenames=[]
@@ -59,7 +63,7 @@ def redact_names(data):
         finaltext =' '.join([str(x) for x in final_sentences])
         modifieddata_list.append(finaltext)
         redacted_entity_count.append(count)
-        print(modifieddata_list)
+        #print(modifieddata_list)
     return modifieddata_list,redacted_entity_count
 
 def redact_genders(data):
@@ -110,9 +114,11 @@ def redact_dates(data):
     return modifieddata_list,redacted_date_count
 
 def redact_concept(data,concept):
-    synsets = wn.synsets(concept)
-    concept_words=[]
-    redacted_sentences=[]
+    synsets=[]
+    for con in concept:
+        synsets += wn.synsets(con)
+    global concept_words
+    global redacted_sentences
     for each_synset in synsets:
         concept_words+=each_synset.lemma_names()
         hypernymns=each_synset.hypernyms()
@@ -128,7 +134,7 @@ def redact_concept(data,concept):
         for each_r_hypernymn in r_hypernymns:
             concept_words+=each_r_hypernymn.lemma_names()
     concept_words=list(set(concept_words))
-    modifieddata=[]
+    modified_data=[]
     for text in data:
         for sentence in sent_tokenize(text):
             for word in concept_words:
@@ -136,25 +142,27 @@ def redact_concept(data,concept):
                     text= text.replace(sentence,'\u2588')
                     redacted_sentences.append(sentence)
                     break
-        modifieddata.append(text)
-    return modifieddata,redacted_sentences,concept_words
+        modified_data.append(text)
+    return modified_data,redacted_sentences,concept_words
 
 def stats(args):
     d = OrderedDict()
     d["names"]=redacted_entity_count
     d["dates"]=redacted_date_count
     d["genders"]=redacted_gender_count
+    d["redacted_sentences"]=redacted_sentences
+    d["concept words"]=concept_words
     if args == "stderr" or args=="STDERR":
-        print(d,file=sys.stderr)
+        print(dumps(d),file=sys.stderr)
     elif args == "stdout" or args == "STDOUT":
-        print(d)
+        print(dumps(d))
     else:
         with open(args+".txt","w") as f:
             f.write(dumps(d))
 
 def write_output(data,outpath):
-    #if outpath not in str(check_output(["ls","-l","."])):
-        #os.makedirs(outpath)
+    if not os.path.exists(os.getcwd()+"/"+outpath):
+        os.mkdir(outpath)
     for (file,outdata) in zip(filenames,data):
         file_name,extension=file.split("/")[-1].split(".")[0],file.split("/")[-1].split(".")[1]
         output_filename=file_name+".redacted."+extension
