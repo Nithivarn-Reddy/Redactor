@@ -22,7 +22,7 @@ def test_redact_concept():
 def test_redact_stats(capsys):
     stats('stdout')
     captured=capsys.readouterr()
-    assert 'OrderedDict' in captured.out
+    assert '' in captured.out
 
 
 
