@@ -62,14 +62,14 @@ Open your Terminal..
 
 ## Steps to Run the project
 
-Now run the project using the following command (Inside the cs5293p20-project-0)
+Now run the project using the following command (Inside the cs5293p20-project-1)
 
  > pipenv run python project1/redactor.py --input '*.txt' \
                     --input 'otherfiles/*.md' \
                     --names --dates \
                     --concept 'kids' \
                     --output 'files/' \
-                    --stats stderr
+                    --stats stdout
   
 This will display the result in your console / terminal.
 
@@ -86,43 +86,67 @@ Go inside the virtual environment by running the following commands.
 
 1) --names flag redacts only entities of type 'PERSON'.
 
-2) The data present in the multi-line is separated by extra "\n" when it is extracted.
+2) Dates of particular format(supported formats are mentioned in the method definition) are redacted. 
 
-3) Data is Missing in Nature Column only.
+3) I have assumed a gender list and redacted the gender based on that list.
 
-4) Missing data is replaced with NULL value.
+4) The output flag must be the flag after the all the redacting flags.
 
-5) The database is created once with the name "normanpd.db" 
+### Functionality of redactor.py
 
-6) The table_name is "incidents" which is dropped everytime.
+    This python file is the driving file for the entire project. Here we register all the flags and capture there values         which are then passed on to the respective methods of project1.py file. I have used argparse for reading the commandline     arguments.
 
-Approach for extracting names:
-  During extraction of names from the text files , first I have broken all paragraphs into sentences and later each sentence into individual words. Creating a words_list.Then applied the pos_tag to get the parts of speech tag for each word and then apply ne_chunk to get the named_entities like PERSON names from the text. But this approach was even giving me extra words like GOODS, SERVICE, TEX so on. But later I realized that the approach of creating a words_list and then applying pos_tag is wrong as the parts of speech of each word depends on the context where it is used in the sentence. So I have changed my approach and applied ne_chunk on pos_tagged words of each sentence and extracted the named_entities from them. This approach has given me good results than the previous way.
-  
-[https://stackoverflow.com/questions/14841997/how-to-navigate-a-nltk-tree-tree]
+### Functionality of each method in project1.py
 
-Approach for extracting genders from text:
-  During the extraction of genders from the text , I have tried using WordNet and synoymns but it didn't workout the corpus for synoymns and antonymns are to less, so I have explicitly taken a list of male_words and female_words and combined them into a list of gender_words . I have also added camel-cased gender_words to the gender_words list and then redacted the words which are part of this list.
-  [http://nealcaren.github.io/text-as-data/html/times_gender.html]
-  
-Approach for matching dates :
+#### readFiles(pattern="*.txt"):
+    This method reads the files of the pattern provided by the --input flags. 
+    Input - ['*.txt','..'] - List of strings 
+    It has a lamda function just with a read functionality and this method returns data in the read from the files in the       form list of strings.This list of data is used by the other methods to redact the data.
+    
+#### redact_names(data):
+    Approach for extracting names:
+    During extraction of names from the text files , first I have broken all paragraphs into sentences and later each           sentence into individual words,there by,creating a words_list.Then applied the pos_tag to get the parts of speech tag       for each word and then applied ne_chunk to get the named_entities like PERSON names from the text. But this approach was     giving me extra words like GOODS, SERVICE, TEX so on. But later, I realized that the above approach of creating a           words_list and then applying pos_tag is wrong as the parts of speech of each word depends on the context where it is         used in the sentence. So I have changed my approach and applied ne_chunk on pos_tagged words of each sentence and           extracted the named_entities from them. This approach has given me good results.
+    For easing through the tree parse I have also used a lambda function.
+    Returns : name redacted data list , list of counts of names redacted in each file. A global list for count is maintained     which is used for statistics.
+References used: (https://stackoverflow.com/questions/14841997/how-to-navigate-a-nltk-tree-tree)
 
-date formats considered = 'dd/mm/yyyy | dd-mm-yyyy | yyyy-mm-dd | yyyy/mm/dd | yyyy-dd-mm | yyyy/dd/mm | mm/dd/yyyy | mm-dd-yyyy | dd (January-December|jan-dec|Jan-Dec|january-decemeber) , yyyy | dd(th) (January-December|jan-dec|Jan-Dec|january-decemeber) yyyy | dd(st) (January-December|jan-dec|Jan-Dec|january-decemeber) yyyy | (January-December|jan-dec|Jan-Dec|january-decemeber) dd , yyyy .
+#### redact_genders(data):
+    Approach for extracting genders from text:
+    During the extraction of genders from the text , I have tried using WordNet and synoymns but it didn't workout as the       corpus for synoymns and antonymns are to less, so I have explicitly taken a list of male_words and female_words and         combined them into a list of gender_words . I have also added camel-cased gender_words to the gender_words list and then     redacted the words which are part of this list.
+    Returns: gender redacted data list , list of counts of genders redacted in each file. The count of genders in each file     is appended to a global list so that it can be used for statistics.
+References used: (http://nealcaren.github.io/text-as-data/html/times_gender.html)
 
-I am extracting the dates of the above format and redacting them. For this to work , I have written a regular expression that matches the above mentioned date formats. It doesn't redact text containing only months and year or only year.
+#### redact_dates(data):
+    Approach for matching dates :
+    date formats considered = 'dd/mm/yyyy | dd-mm-yyyy | yyyy-mm-dd | yyyy/mm/dd | yyyy-dd-mm | yyyy/dd/mm | mm/dd/yyyy |       mm-dd-yyyy | dd (January-December|jan-dec|Jan-Dec|january-decemeber) , yyyy | dd(th) (January-December|jan-dec|Jan-         Dec|january-decemeber) yyyy | dd(st) (January-December|jan-dec|Jan-Dec|january-decemeber) yyyy | (January-December|jan-     dec|Jan-Dec|january-decemeber) dd , yyyy .
+    I am extracting the dates of the above format and redacting them. For this to work , I have written a regular expression     that matches the above mentioned date formats. It doesn't redact text containing only months and year or only year.
+    Returns : dates redacted data list , list of counts of dates redacted in each file. The count of the dates in each file     are appending to a global list so that it can be used for statistics.
+References used: (https://stackoverflow.com/questions/10308970/matching-dates-with-regular-expressions-in-python)                            (https://docs.python.org/3/library/re.html)
 
-[https://stackoverflow.com/questions/10308970/matching-dates-with-regular-expressions-in-python]
-[https://docs.python.org/3/library/re.html]
-
-
-Approach for extracting concept :
-I am passing each concept into the extract_concept function along with the concept to be searched for. I have wordnet synset derived from nltk.corpus for getting all the synsets related to the concept. Then I have searched for hypernymns, homonymns,holonymns of each synset of the concept. I have not taken into account the meronymns as they talk about part of the concept or the substances which contain the concept. I have formed a list of words from each synset of the concept and searched whether each sentence contains any word of the list of words(the synonymns.hypernymns,hyonymns,holonymns). If the sentence contains any word then it is redacted. This approach may have certain errors as wordnet works well for verbs and noun.
+#### redact_concept(data,concept):
+    Approach for extracting concept :
+    I am passing data to into the redact_concept function along with the concept to be searched for. I have used wordnet         synset derived from nltk.corpus for getting all the synsets related to the concept. Then I have searched for hypernymns,     homonymns,holonymns of each synset of the concept. I have not taken into account the meronymns as they talk about part       of the concept or the substances which contain the concept. I have formed a list of words from each synset of the           concept and searched whether a sentence contains any word of the list of words(the                                           synonymns,hypernymns,hyonymns,holonymns). If the sentence contains any word then it is redacted. This approach may have     certain errors as wordnet works well for verbs and noun.I am appending all the redacted sentences to a global list so       that the stats function can use it to display the statistics.
 
 Reference - Text book.
 
-
-
-
-
-
-
+#### redact_stats(args):
+    This method takes a string which is passed as an argument. It generates a dictionary of consisting of                       names,genders,dates,redacted_sentences,concept_words as keys and lists of counts of names , genders, dates which are         generated by the above methods and the redacted_sentences contain the list of all sentences which have some connection       with the concept. I am also additionally adding a key containing the concept_words which are generated around a concept.
+    Finally if args is a either stdout or stderr then it is written to the standardout and standarderror files respectively.
+    If args is other than stdout,stderr then a txt file with the name provided in the argument is created and the dictionary     is written as string.
+    
+#### write_output(data,outpath):
+    This method takes as input the final data which is the redacted data and also the value of the --output flag. It then       checks if a directory mentioned in the outpath is present. If not we create a new directory and write all our .redacted     appended files into that directory.
+    
+#### Testcases
+    
+#### test_redact.py
+    
+    This python file contains the test definitions which I have used.
+    
+#### test_readFile(pattern):
+    This method checks whether the actual readFiles method of the project1.py is returning correct data when I pass certain     patterns.
+    
+#### test_redact_names(sampledata):
+    This method is testing the functionality of the redact_names of project1.py. I am passing in a List of String containing     just the person names and checking whether the method is returning any data or not. 
+    
+#### test_redact_
