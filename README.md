@@ -92,6 +92,8 @@ Go inside the virtual environment by running the following commands.
 
 4) The output flag must be the flag after the all the redacting flags.
 
+5) I have taken two text files modi.txt , text1.txt and one markdown file under otherfiles/ for my execution.
+
 ### Functionality of redactor.py
 
     This python file is the driving file for the entire project. Here we register all the flags and capture there values         which are then passed on to the respective methods of project1.py file. I have used argparse for reading the commandline     arguments.
@@ -147,6 +149,16 @@ Reference - Text book.
     This method checks whether the actual readFiles method of the project1.py is returning correct data when I pass certain     patterns.
     
 #### test_redact_names(sampledata):
-    This method is testing the functionality of the redact_names of project1.py. I am passing in a List of String containing     just the person names and checking whether the method is returning any data or not. 
+    This method is testing the functionality of the redact_names of project1.py. I am passing in a List of String containing     just the person names and checking whether the method is returning any data and it is correctly redacting the names or       not.
     
-#### test_redact_
+#### test_redact_dates(sampledata):
+     This method is testing the functionality of the redact_dates of project1.py. I am passing in a List of String                containing just the date formats and checking whether the method is returning any data and it is correctly redacting        the dates provided in the sample data.
+     
+#### test_redact_genders(sampledata):
+      This method is testing the functionality of the redact_genders of project1.py. I am passing in a List of String             containing just the gender names and checking whether the method is returning any data and it is correctly redacting         the genders.
+      
+#### test_redact_concept(sampledata,concept):
+       This method is testing the functionality of the redact_concept of project1.py. I am passing in a List of String              containing a sentence and the concept which the function it needs to search for. I am checking whether the method            is returning any data and len(redacted_sentences) is not zero.
+      
+#### test_redact_stats(capsys):
+        I am testing whether stats is printing out its data to the correct stream or not, by calling stats('stdout') and checking if an empty string is printed in the stdout.
