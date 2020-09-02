@@ -1,4 +1,4 @@
-# cs5293p20-project-1
+# Redactor
 The main aim of this project is to redact the important information like names,dates,genders and also redact information regarding a particular concept. It also finally provides some information of statistics of what has been redacted.
 I have taken two sample essays from the internet and performed my analysis on it.
 
